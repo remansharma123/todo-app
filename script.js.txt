@@ -1,0 +1,145 @@
+let tasklist = document.getElementById("taskdiary");
+let newtask = document.getElementById("taskdetail");
+
+let Alltasks = []; //Array to hold all the tasks
+let taskid = 0;
+let contentid = 100;
+fetchtasks();
+
+/* Function to add new task to the array */
+
+newtask.addEventListener("keyup", function (event){
+  if(event.keyCode == 13){
+    addnewtask(); //calls function to add task in array
+  }
+
+});
+
+function addnewtask() { //adds task to array
+  if(newtask.value == "")
+  {
+    alert("You can't add blank goals!")
+    return;
+  }
+
+  var tasktoadd = new Object();
+  tasktoadd.taskname = newtask.value;
+  tasktoadd.taskid = taskid;
+  tasktoadd.contentid = contentid;
+  tasktoadd.status = "Pending";
+  Alltasks.push(tasktoadd);
+  storagehandle();
+  taskid++;
+  contentid++;
+  taskadder(tasktoadd); 
+}
+
+function taskadder(task) { //adds the task and other elements to task list column
+  let list = document.createElement("div");
+  list.setAttribute("id", task.taskid);
+
+  let label = document.createElement("label");
+  label.setAttribute("id", task.contentid);
+  label.innerHTML = task.taskname;
+
+  let check = document.createElement("input");
+  check.setAttribute("id", "cbox")
+  check.type = "checkbox";
+
+  check.addEventListener("change", function (event){ //handles checkbox state and status of task
+    let x = document.getElementById(task.contentid);
+    if (event.currentTarget.checked)
+    {
+      x.style.textDecoration = "line-through";
+      x.style.textDecorationColor = "#BFD8B8";
+      task.status = "Completed";
+    }
+    else
+    {
+      x.style.textDecoration = "none";
+      task.status = "Pending";
+    }
+    storagehandle();
+  });
+
+  let editimg = document.createElement("img"); //inserts the edit image
+  editimg.setAttribute("id", "edittask");
+  editimg.src= "edit.jpg";
+
+  let img = document.createElement("img"); //inserts the trash/delete button image
+  img.setAttribute("id", "deltask");
+  img.src = "delete.png";
+
+  list.appendChild(label);
+  list.appendChild(check);
+  list.appendChild(editimg);
+  list.appendChild(img);
+  tasklist.appendChild(list);
+  newtask.value="";
+
+  editimg.addEventListener("click", function(){ // Event Listener for Editing Task
+    let x = document.getElementById(task.contentid);
+    let y = document.getElementById("deltask");
+    let z = document.getElementById("cbox");
+    let a = document.getElementById("edittask");
+    x.style.display = "none";
+    y.style.display = "none";
+    z.style.display = "none";
+    a.style.display = "none";
+
+    let input = document.createElement("input");
+    input.setAttribute("id", "editinput");
+    list.appendChild(input);
+    input.value = x.innerHTML;
+
+    input.addEventListener("keyup", function(event){
+      if(event.keyCode == 13){
+        if(input.value == ""){
+          alert("Cannot be empty!!");
+        }
+        else{
+          x.innerHTML = input.value;
+          task.taskname = input.value; //updates taskname
+          x.style.display = "inline-block";
+          y.style.display = "inline-block";
+          z.style.display = "inline-block";
+          a.style.display = "inline-block";
+          input.style.display = "none";
+          storagehandle(); //updates taskname in localstorage
+        }
+      }
+    });
+  });
+
+  img.addEventListener("click", function () { //removes task through clicking delete button
+    tasklist.removeChild(list);
+    removeObject(task.taskid);
+  });
+}
+
+function removeObject(id) {  //removes the task from array
+  let i;
+  for(i=0; i<Alltasks.length; i++)
+  {
+    let Object = Alltasks[i];
+    if(Object.taskid == id){
+      break;
+    }
+  }
+  Alltasks.splice(i,1);
+  storagehandle();
+}
+
+function storagehandle(){ //local storage
+  localStorage.tasks = JSON.stringify(Alltasks);
+}
+
+function fetchtasks(){ //fetches tasks from local storage
+  if(localStorage.tasks)
+  {
+    Alltasks = JSON.parse(localStorage.tasks);
+  }
+  Alltasks.forEach(function(task){
+    taskadder(task);
+  })
+}
